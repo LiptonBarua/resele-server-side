@@ -19,12 +19,16 @@ async function  run() {
    try{
     const categoryCollection= client.db('assianmentCollection').collection('categorie');
     const productCollection= client.db('assianmentCollection').collection('product');
+    const bookingCollection= client.db('assianmentCollection').collection('booking');
 
     app.get('/category', async(req, res)=>{
         const query={};
         const result = await categoryCollection.find(query).toArray();
         res.send(result)
     })
+
+    // ..........Product Collection..........
+
     app.post('/product', async(req, res)=>{
         const product=req.body;
         const result= await productCollection.insertOne(product)
@@ -41,6 +45,20 @@ async function  run() {
         const result = await productCollection.find(query).toArray()
         res.send(result)
     })
+
+    // ............booking Collection..........
+
+    app.post('/booking', async(req, res)=>{
+        const booking= req.body;
+        const result= await bookingCollection.insertOne(booking);
+        res.send(result)
+    });
+    app.get('/booking', async(req, res)=>{
+        const query ={};
+        const result= await bookingCollection.find(query).toArray();
+        res.send(result)
+    })
+
    } 
    finally{
     
