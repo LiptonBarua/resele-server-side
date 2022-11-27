@@ -17,6 +17,7 @@ console.log(uri)
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 function verifyJWT(req, res, next){
+    console.log('token insert verifyJWT', req.headers.authorization)
     const authHeader =req.headers.authorization;
     if(!authHeader){
       return res.status(401).send('unauthorization access')
@@ -72,12 +73,15 @@ async function  run() {
         const result= await bookingCollection.insertOne(booking);
         res.send(result)
     });
+
     app.get('/booking', async(req, res)=>{
-        const query = {};
+       const query={};                                                                                                                                                 
         const result= await bookingCollection.find(query).toArray();
         res.send(result)
     })
 
+ 
+  
     // ...............User Collection......................
 
     app.post('/users', async(req, res)=>{
@@ -95,16 +99,31 @@ async function  run() {
     // .........JSON Web Token................
 
     app.get('/jwt', async(req, res)=>{
-        const email= req.query.email;
-        const query={email:email};
-        const users= await usersCollection.findOne(query);
-        if(users){
-            const token = jwt.sign({email}, process.env.ACCESS_TOKEN, {expiresIn: '1d'});
-            return res.send({accessToken: token})
+        const email = req.query.email;
+        const query ={email:email};
+        const user = await usersCollection.findOne(query);
+        if(user){
+          const token = jwt.sign({email}, process.env.ACCESS_TOKEN, {expiresIn: '365d'});
+          return res.send({accessToken: token})
         }
-        console.log(users)
-        res.status(403).send({accessToken: ""})
-    })
+        console.log(user)
+        res.status(401).send({accessToken: ''})
+      })
+
+    //   .........Admin Collection...........
+
+    app.put('/users/admin/:id', async(req, res)=>{
+        const id = req.params.id;
+        const filter = {_id:ObjectId(id)};
+        const options = { upsert: true };
+        const updateDos ={
+          $set: {
+            role: 'admin'
+          }
+        }
+        const result= await usersCollection.updateOne(filter, updateDos,options);
+        res.send(result)
+      })
    } 
    finally{
     
