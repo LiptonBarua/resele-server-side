@@ -124,6 +124,14 @@ async function  run() {
         const result= await usersCollection.updateOne(filter, updateDos,options);
         res.send(result)
       })
+
+      
+  app.get('/users/admin/:email', async(req, res)=>{
+    const email = req.params.email;
+    const query = {email};
+    const user = await usersCollection.findOne(query);
+    res.send({isAdmin: user?.role==='admin'})
+  })
    } 
    finally{
     
@@ -134,14 +142,6 @@ run().catch(error=>console.log(error))
 app.get('/', (req, res)=>{
     res.send('assianment 12 is runnuing')
 })
-
-
-
-
-
-
-
-
 
 
 app.listen(port, ()=>{
