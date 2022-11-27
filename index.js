@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId, Collection } = require('mongodb');
 const port = process.env.PORT || 8000;
 
 require('dotenv').config();
@@ -20,6 +20,7 @@ async function  run() {
     const categoryCollection= client.db('assianmentCollection').collection('categorie');
     const productCollection= client.db('assianmentCollection').collection('product');
     const bookingCollection= client.db('assianmentCollection').collection('booking');
+    const usersCollection=client.db('assianmentCollection').collection('users');
 
     app.get('/category', async(req, res)=>{
         const query={};
@@ -46,7 +47,7 @@ async function  run() {
         res.send(result)
     })
 
-    // ............booking Collection..........
+    // ............Booking Collection..........
 
     app.post('/booking', async(req, res)=>{
         const booking= req.body;
@@ -56,6 +57,14 @@ async function  run() {
     app.get('/booking', async(req, res)=>{
         const query ={};
         const result= await bookingCollection.find(query).toArray();
+        res.send(result)
+    })
+
+    // ...............User Collection......................
+
+    app.post('/users', async(req, res)=>{
+        const users= req.body;
+        const result= await usersCollection.insertOne(users);
         res.send(result)
     })
 
