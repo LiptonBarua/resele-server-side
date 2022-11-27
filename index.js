@@ -72,13 +72,8 @@ async function  run() {
         const result= await bookingCollection.insertOne(booking);
         res.send(result)
     });
-    app.get('/booking', verifyJWT, async(req, res)=>{
-        const email= req.query.email;
-        const docodedEmail = req.docoded.email;
-        if(email !==docodedEmail){
-          return res.status(403).send({message: 'forbidden access'})
-        }
-        const query = {email: email};
+    app.get('/booking', async(req, res)=>{
+        const query = {};
         const result= await bookingCollection.find(query).toArray();
         res.send(result)
     })
@@ -91,6 +86,11 @@ async function  run() {
         res.send(result)
     })
 
+    app.get('/users', async(req, res)=>{
+        const query={};
+        const result = await usersCollection.find(query).toArray();
+        res.send(result)
+    })
 
     // .........JSON Web Token................
 
