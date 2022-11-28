@@ -66,6 +66,12 @@ async function  run() {
         res.send(result)
     })
 
+    app.delete('/product/:id', async(req, res)=>{
+        const id = req.params.id;
+        const filter = {_id:ObjectId(id)}
+        const result = await productCollection.deleteOne(filter)
+        res.send(result)
+      })
     // ............Booking Collection..........
 
     app.post('/booking', async(req, res)=>{
@@ -96,6 +102,12 @@ async function  run() {
         res.send(result)
     })
 
+    app.delete('/users/:id', async(req, res)=>{
+      const id = req.params.id;
+      const filter = {_id:ObjectId(id)}
+      const result = await usersCollection.deleteOne(filter)
+      res.send({...result,...req.body})
+    })
     // .........JSON Web Token................
 
     app.get('/jwt', async(req, res)=>{
@@ -132,6 +144,8 @@ async function  run() {
     const user = await usersCollection.findOne(query);
     res.send({isAdmin: user?.role==='admin'})
   })
+
+
    } 
    finally{
     
