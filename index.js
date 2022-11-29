@@ -42,7 +42,11 @@ async function  run() {
     const bookingCollection= client.db('assianmentCollection').collection('booking');
     const usersCollection=client.db('assianmentCollection').collection('users');
     const paymentsCollection = client.db('assianmentCollection').collection('payments');
+
     const verifyAdmin=(req, res, next)=>{
+      next()
+    }
+    const verifySaller=(req, res, next)=>{
       next()
     }
     app.get('/category', async(req, res)=>{
@@ -53,24 +57,34 @@ async function  run() {
 
     // ..........Product Collection..........
 
-    app.post('/product',verifyJWT, verifyAdmin, async(req, res)=>{
+    app.post('/product',verifyJWT, verifyAdmin, verifySaller, async(req, res)=>{
         const product=req.body;
         const result= await productCollection.insertOne(product)
         res.send({...result, ...req.body})
     })
-    app.get('/product', verifyAdmin, async(req, res)=>{
-      const query={}
-        const name = await productCollection.find(query).toArray();
-        res.send(name)
+    app.get('/product',  async(req, res)=>{
+      let query = {}
+      if(req.query.email){
+        query={
+            email: req.query.email
+        }
+      }
+      console.log(query)
+      const cursor = productCollection.find(query);
+      const orders = await cursor.toArray();
+      console.log(orders)
+      res.send(orders)
     })
-    app.get('/product/:brand', verifyAdmin, async(req, res)=>{
+
+
+    app.get('/product/:brand', verifyAdmin, verifySaller, async(req, res)=>{
         const brand = req.params.brand;
         const query={brand}
         const result = await productCollection.find(query).toArray()
         res.send(result)
     })
 
-    app.delete('/product/:id', verifyAdmin, async(req, res)=>{
+    app.delete('/product/:id', verifyAdmin, verifySaller, async(req, res)=>{
         const id = req.params.id;
         const filter = {_id:ObjectId(id)}
         const result = await productCollection.deleteOne(filter)
@@ -84,11 +98,7 @@ async function  run() {
         res.send(result)
     });
 
-    app.get('/booking', verifyJWT, async(req, res)=>{
-       const query={};                                                                                                                                                 
-        const result= await bookingCollection.find(query).toArray();
-        res.send(result)
-    })
+  
 
     app.get('/booking/:id', async(req, res)=>{
       const id = req.params.id;
@@ -98,6 +108,22 @@ async function  run() {
     })
  
   
+
+    app.get('/booking',  async(req, res)=>{
+
+
+        let query = {}
+        if(req.query.email){
+          query={
+              email: req.query.email
+          }
+        }
+        console.log(query)
+        const cursor = bookingCollection.find(query);
+        const orders = await cursor.toArray();
+        console.log(orders)
+        res.send(orders)
+      })
     // ...............User Collection......................
 
     app.post('/users', async(req, res)=>{
@@ -147,6 +173,20 @@ async function  run() {
         res.send(result)
       })
 
+
+    app.put('/users/verified/:id',verifyJWT, verifySaller, async(req, res)=>{
+        const id = req.params.id;
+        const filter = {_id:ObjectId(id)};
+        const options = { upsert: true };
+        const updateDos ={
+          $set: {
+            isVerified: 'verified'
+          }
+        }
+        const result= await usersCollection.updateOne(filter, updateDos,options);
+        res.send(result)
+      })
+
       
   app.get('/users/admin/:email', async(req, res)=>{
     const email = req.params.email;
@@ -159,7 +199,7 @@ async function  run() {
   app.post('/create-payment-intent', async(req, res)=>{
     const booking= req.body;
     const price= booking.price;
-    const amount = price *100;
+    const amount = parseFloat(price *100);
     const paymentIntent = await stripe.paymentIntents.create({
       currency: "usd",
       amount: amount,
