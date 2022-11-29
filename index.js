@@ -6,6 +6,7 @@ const port = process.env.PORT || 8000;
 require('dotenv').config();
 const jwt =require('jsonwebtoken');
 const cors = require('cors');
+const stripe = require("stripe")(process.env.SECRET_KEY);
 
 
 app.use(cors())
@@ -40,7 +41,10 @@ async function  run() {
     const productCollection= client.db('assianmentCollection').collection('product');
     const bookingCollection= client.db('assianmentCollection').collection('booking');
     const usersCollection=client.db('assianmentCollection').collection('users');
-
+    const paymentsCollection = client.db('assianmentCollection').collection('payments');
+    const verifyAdmin=(req, res, next)=>{
+      next()
+    }
     app.get('/category', async(req, res)=>{
         const query={};
         const result = await categoryCollection.find(query).toArray();
@@ -49,24 +53,24 @@ async function  run() {
 
     // ..........Product Collection..........
 
-    app.post('/product', async(req, res)=>{
+    app.post('/product',verifyJWT, verifyAdmin, async(req, res)=>{
         const product=req.body;
         const result= await productCollection.insertOne(product)
         res.send({...result, ...req.body})
     })
-    app.get('/product', async(req, res)=>{
-       const query={}
+    app.get('/product', verifyAdmin, async(req, res)=>{
+      const query={}
         const name = await productCollection.find(query).toArray();
         res.send(name)
     })
-    app.get('/product/:brand', async(req, res)=>{
+    app.get('/product/:brand', verifyAdmin, async(req, res)=>{
         const brand = req.params.brand;
         const query={brand}
         const result = await productCollection.find(query).toArray()
         res.send(result)
     })
 
-    app.delete('/product/:id', async(req, res)=>{
+    app.delete('/product/:id', verifyAdmin, async(req, res)=>{
         const id = req.params.id;
         const filter = {_id:ObjectId(id)}
         const result = await productCollection.deleteOne(filter)
@@ -80,12 +84,18 @@ async function  run() {
         res.send(result)
     });
 
-    app.get('/booking', async(req, res)=>{
+    app.get('/booking', verifyJWT, async(req, res)=>{
        const query={};                                                                                                                                                 
         const result= await bookingCollection.find(query).toArray();
         res.send(result)
     })
 
+    app.get('/booking/:id', async(req, res)=>{
+      const id = req.params.id;
+      const query = {_id:ObjectId(id)};
+      const result = await bookingCollection.findOne(query);
+      res.send(result)
+    })
  
   
     // ...............User Collection......................
@@ -102,7 +112,7 @@ async function  run() {
         res.send(result)
     })
 
-    app.delete('/users/:id', async(req, res)=>{
+    app.delete('/users/:id', verifyAdmin, async(req, res)=>{
       const id = req.params.id;
       const filter = {_id:ObjectId(id)}
       const result = await usersCollection.deleteOne(filter)
@@ -124,7 +134,7 @@ async function  run() {
 
     //   .........Admin Collection...........
 
-    app.put('/users/admin/:id', async(req, res)=>{
+    app.put('/users/admin/:id',verifyJWT, verifyAdmin, async(req, res)=>{
         const id = req.params.id;
         const filter = {_id:ObjectId(id)};
         const options = { upsert: true };
@@ -144,6 +154,39 @@ async function  run() {
     const user = await usersCollection.findOne(query);
     res.send({isAdmin: user?.role==='admin'})
   })
+
+
+  app.post('/create-payment-intent', async(req, res)=>{
+    const booking= req.body;
+    const price= booking.price;
+    const amount = price *100;
+    const paymentIntent = await stripe.paymentIntents.create({
+      currency: "usd",
+      amount: amount,
+      "payment_method_types": [
+        "card"
+      ],
+    })
+    res.send({
+      clientSecret: paymentIntent.client_secret,
+    });
+  })
+
+  app.post('/payments', async(req, res)=>{
+    const payments= req.body;
+    const result = await paymentsCollection.insertOne(payments);
+    const id = payments.bookingId;
+    const filter={_id:ObjectId(id)};
+    const updateDos={
+       $set:{
+        paid: true,
+        transactionId:payments.transactionId
+       }
+    }
+    const updateResult= await bookingCollection.updateOne(filter, updateDos)
+    res.send(result)
+   })
+
 
 
    } 
