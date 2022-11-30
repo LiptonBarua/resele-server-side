@@ -212,7 +212,7 @@ async function  run() {
   })
 
 
-  // ...................Adverice Collection...............
+  // ...................Advertice Collection...............
 
   app.put('/advertice/:id', async(req, res)=>{
     const id= req.params.id;
@@ -228,12 +228,13 @@ async function  run() {
   })
 
   app.get('/products', async(req, res)=>{
+    let date = req.params.date;
     let query={};
 
     if(req.query.advertice){
       query={advertice: req.query.advertice}
     }
-    const result= await productCollection.find(query).toArray();
+    const result= await productCollection.find(query).sort({date: -1}).limit(3).toArray();
     console.log(result)
     res.send(result)
   })
@@ -286,6 +287,9 @@ app.get('/', (req, res)=>{
 })
 
 
+app.listen(port, ()=>{
+    console.log(`assianment is running ${port}`)
+})
 app.listen(port, ()=>{
     console.log(`assianment is running ${port}`)
 })
