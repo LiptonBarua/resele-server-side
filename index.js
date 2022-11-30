@@ -231,7 +231,7 @@ async function  run() {
     let query={};
 
     if(req.query.advertice){
-      query={advertice: req.query.advertice, email: req.query.email}
+      query={advertice: req.query.advertice}
     }
     const result= await productCollection.find(query).toArray();
     console.log(result)
