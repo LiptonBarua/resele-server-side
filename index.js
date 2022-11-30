@@ -42,6 +42,7 @@ async function  run() {
     const bookingCollection= client.db('assianmentCollection').collection('booking');
     const usersCollection=client.db('assianmentCollection').collection('users');
     const paymentsCollection = client.db('assianmentCollection').collection('payments');
+    const advericeCollection = client.db('assianmentCollection').collection('adverice');
 
     const verifyAdmin=(req, res, next)=>{
       next()
@@ -69,13 +70,13 @@ async function  run() {
             email: req.query.email
         }
       }
+
       console.log(query)
       const cursor = productCollection.find(query);
       const orders = await cursor.toArray();
       console.log(orders)
       res.send(orders)
     })
-
 
     app.get('/product/:brand', verifyAdmin, verifySaller, async(req, res)=>{
         const brand = req.params.brand;
@@ -211,6 +212,35 @@ async function  run() {
   })
 
 
+  // ...................Adverice Collection...............
+
+  app.put('/advertice/:id', async(req, res)=>{
+    const id= req.params.id;
+    const filter={_id:ObjectId(id)};
+    const options = { upsert: true };
+    const updateDos={
+      $set:{
+        'advertice': 'true'
+      }
+    };
+   const result= await productCollection.updateOne(filter, updateDos,options);
+   res.send(result)
+  })
+
+  app.get('/products', async(req, res)=>{
+    let query={};
+
+    if(req.query.advertice){
+      query={advertice: req.query.advertice, email: req.query.email}
+    }
+    const result= await productCollection.find(query).toArray();
+    console.log(result)
+    res.send(result)
+  })
+  
+
+
+  // .................Payment Collection.apply.................
   app.post('/create-payment-intent', async(req, res)=>{
     const booking= req.body;
     const price= booking.price;
