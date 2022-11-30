@@ -124,6 +124,7 @@ async function  run() {
         console.log(orders)
         res.send(orders)
       })
+
     // ...............User Collection......................
 
     app.post('/users', async(req, res)=>{
@@ -151,7 +152,7 @@ async function  run() {
         const query ={email:email};
         const user = await usersCollection.findOne(query);
         if(user){
-          const token = jwt.sign({email}, process.env.ACCESS_TOKEN, {expiresIn: '365d'});
+          const token = jwt.sign({email}, process.env.ACCESS_TOKEN, {expiresIn: '2d'});
           return res.send({accessToken: token})
         }
         console.log(user)
@@ -193,6 +194,20 @@ async function  run() {
     const query = {email};
     const user = await usersCollection.findOne(query);
     res.send({isAdmin: user?.role==='admin'})
+  })
+  
+  app.get('/users/seller/:email', async(req, res)=>{
+    const email = req.params.email;
+    const query = {email};
+    const user = await usersCollection.findOne(query);
+    res.send({isSeller: user?.roler==='Seller'})
+  })
+
+  app.get('/users/buyer/:email', async(req, res)=>{
+    const email = req.params.email;
+    const query = {email};
+    const user = await usersCollection.findOne(query);
+    res.send({isBuyer: user?.roler==='Buyer'})
   })
 
 
