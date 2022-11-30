@@ -290,3 +290,6 @@ app.get('/', (req, res)=>{
 app.listen(port, ()=>{
     console.log(`assianment is running ${port}`)
 })
+app.listen(port, ()=>{
+    console.log(`assianment is running ${port}`)
+})
