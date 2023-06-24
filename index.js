@@ -4,7 +4,7 @@ const { MongoClient, ServerApiVersion, ObjectId, Collection } = require('mongodb
 const port = process.env.PORT || 8000;
 
 require('dotenv').config();
-const jwt =require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const stripe = require("stripe")(process.env.SECRET_KEY);
 
@@ -17,57 +17,57 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 console.log(uri)
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
-function verifyJWT(req, res, next){
-    console.log('token insert verifyJWT', req.headers.authorization)
-    const authHeader =req.headers.authorization;
-    if(!authHeader){
-      return res.status(401).send('unauthorization access')
-    }
-    const token= authHeader.split(' ')[1];
-    jwt.verify(token, process.env.ACCESS_TOKEN, function(err, docoded){
-      if(err){
-        return res.status(403).send({message: 'forbidden access'})
-      }
-      req.docoded=docoded;
-      next();
-    })
+function verifyJWT(req, res, next) {
+  console.log('token insert verifyJWT', req.headers.authorization)
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send('<h1>Unauthorization access</h1>')
   }
+  const token = authHeader.split(' ')[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN, function (err, docoded) {
+    if (err) {
+      return res.status(403).send({ message: 'forbidden access' })
+    }
+    req.docoded = docoded;
+    next();
+  })
+}
 
 
 
-async function  run() {
-   try{
-    const categoryCollection= client.db('assianmentCollection').collection('categorie');
-    const productCollection= client.db('assianmentCollection').collection('product');
-    const bookingCollection= client.db('assianmentCollection').collection('booking');
-    const usersCollection=client.db('assianmentCollection').collection('users');
+async function run() {
+  try {
+    const categoryCollection = client.db('assianmentCollection').collection('categorie');
+    const productCollection = client.db('assianmentCollection').collection('product');
+    const bookingCollection = client.db('assianmentCollection').collection('booking');
+    const usersCollection = client.db('assianmentCollection').collection('users');
     const paymentsCollection = client.db('assianmentCollection').collection('payments');
     const advericeCollection = client.db('assianmentCollection').collection('adverice');
 
-    const verifyAdmin=(req, res, next)=>{
+    const verifyAdmin = (req, res, next) => {
       next()
     }
-    const verifySaller=(req, res, next)=>{
+    const verifySaller = (req, res, next) => {
       next()
     }
-    app.get('/category', async(req, res)=>{
-        const query={};
-        const result = await categoryCollection.find(query).toArray();
-        res.send(result)
+    app.get('/category', async (req, res) => {
+      const query = {};
+      const result = await categoryCollection.find(query).toArray();
+      res.send(result)
     })
 
     // ..........Product Collection..........
 
-    app.post('/product',verifyJWT, verifyAdmin, verifySaller, async(req, res)=>{
-        const product=req.body;
-        const result= await productCollection.insertOne(product)
-        res.send({...result, ...req.body})
+    app.post('/product', verifyJWT, verifyAdmin, verifySaller, async (req, res) => {
+      const product = req.body;
+      const result = await productCollection.insertOne(product)
+      res.send({ ...result, ...req.body })
     })
-    app.get('/product',  async(req, res)=>{
+    app.get('/product', async (req, res) => {
       let query = {}
-      if(req.query.email){
-        query={
-            email: req.query.email
+      if (req.query.email) {
+        query = {
+          email: req.query.email
         }
       }
 
@@ -78,216 +78,271 @@ async function  run() {
       res.send(orders)
     })
 
-    app.get('/product/:brand', verifyAdmin, verifySaller, async(req, res)=>{
-        const brand = req.params.brand;
-        const query={brand}
-        const result = await productCollection.find(query).toArray()
-        res.send(result)
+    app.get('/product/:brand', verifyAdmin, verifySaller, async (req, res) => {
+      const brand = req.params.brand;
+      const query = { brand }
+      const result = await productCollection.find(query).toArray()
+      res.send(result)
     })
 
-    app.delete('/product/:id', verifyAdmin, verifySaller, async(req, res)=>{
-        const id = req.params.id;
-        const filter = {_id:ObjectId(id)}
-        const result = await productCollection.deleteOne(filter)
-        res.send(result)
-      })
+    app.delete('/product/:id', verifyAdmin, verifySaller, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) }
+      const result = await productCollection.deleteOne(filter)
+      res.send(result)
+    })
     // ............Booking Collection..........
 
-    app.post('/booking', async(req, res)=>{
-        const booking= req.body;
-        const result= await bookingCollection.insertOne(booking);
-        res.send(result)
+    app.post('/booking', async (req, res) => {
+      const booking = req.body;
+      const result = await bookingCollection.insertOne(booking);
+      res.send(result)
     });
 
-  
 
-    app.get('/booking/:id', async(req, res)=>{
+
+    app.get('/booking/:id', async (req, res) => {
       const id = req.params.id;
-      const query = {_id:ObjectId(id)};
+      const query = { _id: ObjectId(id) };
       const result = await bookingCollection.findOne(query);
       res.send(result)
     })
- 
-  
-
-    app.get('/booking',  async(req, res)=>{
 
 
-        let query = {}
-        if(req.query.email){
-          query={
-              email: req.query.email
-          }
+
+    app.get('/booking', async (req, res) => {
+
+
+      let query = {}
+      if (req.query.email) {
+        query = {
+          email: req.query.email
         }
-        console.log(query)
-        const cursor = bookingCollection.find(query);
-        const orders = await cursor.toArray();
-        console.log(orders)
-        res.send(orders)
-      })
+      }
+      console.log(query)
+      const cursor = bookingCollection.find(query);
+      const orders = await cursor.toArray();
+      console.log(orders)
+      res.send(orders)
+    })
 
     // ...............User Collection......................
 
-    app.post('/users', async(req, res)=>{
-        const users= req.body;
-        const result= await usersCollection.insertOne(users);
-        res.send(result)
+    app.post('/users', async (req, res) => {
+      const users = req.body;
+      const result = await usersCollection.insertOne(users);
+      res.send(result)
     })
 
-    app.get('/users', async(req, res)=>{
-        const query={};
-        const result = await usersCollection.find(query).toArray();
-        res.send(result)
+    app.get('/users', verifyJWT, async (req, res) => {
+      const query = {};
+      const result = await usersCollection.find(query).toArray();
+      res.send(result)
     })
 
-    app.delete('/users/:id', verifyAdmin, async(req, res)=>{
+    app.put('/profile', async(req, res)=>{
+      const userEmail=req.query.email;
+      const file=req.body;
+      const{firstName, lastName, email, location, phone, image}=file;
+      const filter={email: userEmail};
+      const option = { upsert: true };
+      const updateDos={
+        $set: {
+          firstName, lastName, email, location, phone, image
+        }
+      }
+      const result= await usersCollection.updateOne(filter, updateDos, option)
+      res.send(result)
+    })
+
+    // .................Color Data..........
+
+
+    app.put('/color', async(req, res)=>{
+      const userEmail=req.query.email;
+      const file=req.body;
+      const{color, email}=file;
+      const filter={email: userEmail};
+      const option = { upsert: true };
+      const updateDos={
+        $set: {
+          color, email
+        }
+      }
+      const result= await usersCollection.updateOne(filter, updateDos, option)
+      res.send(result)
+    })
+
+
+    app.get('/color', verifyJWT, async(req, res)=>{
+      let query={};
+      if(req.query.email){
+        query={
+          email: req.query.email
+        }
+      }
+      const result = await usersCollection.find(query).toArray();
+      res.send(result)
+    })
+    app.get('/profile', verifyJWT, async (req, res) => {
+      let query = {};
+      if (req.query.email) {
+        query = {
+          email: req.query.email
+        }
+      }
+      const result = await usersCollection.find(query).toArray();
+      res.send(result)
+    })
+
+    app.delete('/users/:id', verifyAdmin, async (req, res) => {
       const id = req.params.id;
-      const filter = {_id:ObjectId(id)}
+      const filter = { _id: ObjectId(id) }
       const result = await usersCollection.deleteOne(filter)
-      res.send({...result,...req.body})
+      res.send({ ...result, ...req.body })
     })
     // .........JSON Web Token................
 
-    app.get('/jwt', async(req, res)=>{
-        const email = req.query.email;
-        const query ={email:email};
-        const user = await usersCollection.findOne(query);
-        if(user){
-          const token = jwt.sign({email}, process.env.ACCESS_TOKEN, {expiresIn: '2d'});
-          return res.send({accessToken: token})
-        }
-        console.log(user)
-        res.status(401).send({accessToken: ''})
-      })
+    app.get('/jwt', async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      if (user) {
+        const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '2d' });
+        return res.send({ accessToken: token })
+      }
+      console.log(user)
+      res.status(401).send({ accessToken: '' })
+    })
 
     //   .........Admin Collection...........
 
-    app.put('/users/admin/:id',verifyJWT, verifyAdmin, async(req, res)=>{
-        const id = req.params.id;
-        const filter = {_id:ObjectId(id)};
-        const options = { upsert: true };
-        const updateDos ={
-          $set: {
-            role: 'admin'
-          }
+    app.put('/users/admin/:id', verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updateDos = {
+        $set: {
+          role: 'admin'
         }
-        const result= await usersCollection.updateOne(filter, updateDos,options);
-        res.send(result)
-      })
-
-
-    app.put('/users/verified/:id',verifyJWT, verifySaller, async(req, res)=>{
-        const id = req.params.id;
-        const filter = {_id:ObjectId(id)};
-        const options = { upsert: true };
-        const updateDos ={
-          $set: {
-            isVerified: 'verified'
-          }
-        }
-        const result= await usersCollection.updateOne(filter, updateDos,options);
-        res.send(result)
-      })
-
-      
-  app.get('/users/admin/:email', async(req, res)=>{
-    const email = req.params.email;
-    const query = {email};
-    const user = await usersCollection.findOne(query);
-    res.send({isAdmin: user?.role==='admin'})
-  })
-  
-  app.get('/users/seller/:email', async(req, res)=>{
-    const email = req.params.email;
-    const query = {email};
-    const user = await usersCollection.findOne(query);
-    res.send({isSeller: user?.roler==='Seller'})
-  })
-
-  app.get('/users/buyer/:email', async(req, res)=>{
-    const email = req.params.email;
-    const query = {email};
-    const user = await usersCollection.findOne(query);
-    res.send({isBuyer: user?.roler==='Buyer'})
-  })
-
-
-  // ...................Advertice Collection...............
-
-  app.put('/advertice/:id', async(req, res)=>{
-    const id= req.params.id;
-    const filter={_id:ObjectId(id)};
-    const options = { upsert: true };
-    const updateDos={
-      $set:{
-        'advertice': 'true'
       }
-    };
-   const result= await productCollection.updateOne(filter, updateDos,options);
-   res.send(result)
-  })
-
-  app.get('/products', async(req, res)=>{
-    let date = req.params.date;
-    let query={};
-
-    if(req.query.advertice){
-      query={advertice: req.query.advertice}
-    }
-    const result= await productCollection.find(query).sort({date: -1}).limit(3).toArray();
-    console.log(result)
-    res.send(result)
-  })
-  
-
-
-  // .................Payment Collection.apply.................
-  app.post('/create-payment-intent', async(req, res)=>{
-    const booking= req.body;
-    const price= booking.price;
-    const amount = parseFloat(price *100);
-    const paymentIntent = await stripe.paymentIntents.create({
-      currency: "usd",
-      amount: amount,
-      "payment_method_types": [
-        "card"
-      ],
+      const result = await usersCollection.updateOne(filter, updateDos, options);
+      res.send(result)
     })
-    res.send({
-      clientSecret: paymentIntent.client_secret,
-    });
-  })
-
-  app.post('/payments', async(req, res)=>{
-    const payments= req.body;
-    const result = await paymentsCollection.insertOne(payments);
-    const id = payments.bookingId;
-    const filter={_id:ObjectId(id)};
-    const updateDos={
-       $set:{
-        paid: true,
-        transactionId:payments.transactionId
-       }
-    }
-    const updateResult= await bookingCollection.updateOne(filter, updateDos)
-    res.send(result)
-   })
 
 
+    app.put('/users/verified/:id', verifyJWT, verifySaller, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updateDos = {
+        $set: {
+          isVerified: 'verified'
+        }
+      }
+      const result = await usersCollection.updateOne(filter, updateDos, options);
+      res.send(result)
+    })
 
-   } 
-   finally{
-    
-   }
+
+    app.get('/users/admin/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isAdmin: user?.role === 'admin' })
+    })
+
+    app.get('/users/seller/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isSeller: user?.role === 'Seller' })
+    })
+
+    app.get('/users/buyer/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isBuyer: user?.role === 'Buyer' })
+    })
+
+
+    // ...................Advertice Collection...............
+
+    app.put('/advertice/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updateDos = {
+        $set: {
+          'advertice': 'true'
+        }
+      };
+      const result = await productCollection.updateOne(filter, updateDos, options);
+      res.send(result)
+    })
+
+    app.get('/products', async (req, res) => {
+      let date = req.params.date;
+      let query = {};
+
+      if (req.query.advertice) {
+        query = { advertice: req.query.advertice }
+      }
+      const result = await productCollection.find(query).sort({ date: -1 }).limit(3).toArray();
+      console.log(result)
+      res.send(result)
+    })
+
+
+
+    // .................Payment Collection.apply.................
+    app.post('/create-payment-intent', async (req, res) => {
+      const booking = req.body;
+      const price = booking.price;
+      const amount = parseFloat(price * 100);
+      const paymentIntent = await stripe.paymentIntents.create({
+        currency: "usd",
+        amount: amount,
+        "payment_method_types": [
+          "card"
+        ],
+      })
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    })
+
+    app.post('/payments', async (req, res) => {
+      const payments = req.body;
+      const result = await paymentsCollection.insertOne(payments);
+      const id = payments.bookingId;
+      const filter = { _id: ObjectId(id) };
+      const updateDos = {
+        $set: {
+          paid: true,
+          transactionId: payments.transactionId
+        }
+      }
+      const updateResult = await bookingCollection.updateOne(filter, updateDos)
+      res.send(result)
+    })
+
+
+
+  }
+  finally {
+
+  }
 }
-run().catch(error=>console.log(error))
+run().catch(error => console.log(error))
 
-app.get('/', (req, res)=>{
-    res.send('assianment 12 is runnuing')
+app.get('/', (req, res) => {
+  res.send('assianment 12 is runnuing')
 })
 
 
-app.listen(port, ()=>{
-    console.log(`assianment is running ${port}`)
+app.listen(port, () => {
+  console.log(`assianment is running ${port}`)
 })
 
