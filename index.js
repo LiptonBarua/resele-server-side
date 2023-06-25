@@ -108,11 +108,7 @@ async function run() {
       res.send(result)
     })
 
-
-
     app.get('/booking', async (req, res) => {
-
-
       let query = {}
       if (req.query.email) {
         query = {
@@ -126,6 +122,15 @@ async function run() {
       res.send(orders)
     })
 
+
+
+
+    app.delete('/booking/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) }
+      const result = await bookingCollection.deleteOne(filter)
+      res.send(result)
+    })
     // ...............User Collection......................
 
     app.post('/users', async (req, res) => {
@@ -134,7 +139,8 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/users', verifyJWT, async (req, res) => {
+    app.get('/users', async (req, res) => {
+      
       const query = {};
       const result = await usersCollection.find(query).toArray();
       res.send(result)
@@ -174,7 +180,8 @@ async function run() {
     })
 
 
-    app.get('/color', verifyJWT, async(req, res)=>{
+    app.get('/color',  async(req, res)=>{
+      
       let query={};
       if(req.query.email){
         query={
@@ -184,7 +191,7 @@ async function run() {
       const result = await usersCollection.find(query).toArray();
       res.send(result)
     })
-    app.get('/profile', verifyJWT, async (req, res) => {
+    app.get('/profile', async (req, res) => {
       let query = {};
       if (req.query.email) {
         query = {
@@ -343,6 +350,6 @@ app.get('/', (req, res) => {
 
 
 app.listen(port, () => {
-  console.log(`assianment is running ${port}`)
+  console.log(`Carena Project server side is running ${port}`)
 })
 
